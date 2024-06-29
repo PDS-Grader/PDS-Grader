@@ -70,13 +70,13 @@ st.title("C++ Code Grader")
 problems = {
     "Pointing": {
         "test_cases": 2,
-        "rt": 10,  # Runtime limit in seconds
-        "mem": 50 * 1024 * 1024  # Memory limit in bytes
-    },
-    "Problem 2": {
-        "test_cases": 0,
         "rt": 1,  # Runtime limit in seconds
-        "mem": 50 * 1024 * 1024  # Memory limit in bytes
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    },
+    "Stonks": {
+        "test_cases": 2,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
     }
     # Add more problems here
 }
