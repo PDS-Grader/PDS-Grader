@@ -11,17 +11,13 @@ def compile_cpp(source_path, output_path):
     return result.returncode, result.stdout.decode(), result.stderr.decode()
 
 def download_file(url, destination):
-    response = requests.get(url)
-    with open(destination, 'wb') as f:
-        f.write(response.content)
-
-def get_memory_usage(pid):
     try:
-        process = psutil.Process(pid)
-        memory_info = process.memory_info()
-        return memory_info.rss
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        return None
+        response = requests.get(url, headers={'Accept': 'application/vnd.github.v3.raw'})
+        response.raise_for_status()
+        with open(destination, 'wb') as f:
+            f.write(response.content)
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error downloading file from {url}: {str(e)}")
 
 def run_executable(executable_path, input_file, runtime_limit, memory_limit):
     try:
@@ -34,7 +30,6 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
             process = subprocess.Popen([executable_path], stdin=f, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             pid = process.pid
         
-        # Communicate with timeout
         try:
             stdout, stderr = process.communicate(timeout=runtime_limit)
             returncode = process.returncode
@@ -46,8 +41,13 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
         end_time = time.time()
         runtime = end_time - start_time
         
-        # Get memory usage
-        max_memory = get_memory_usage(pid)
+        # Retrieve memory usage if process is still alive
+        if psutil.pid_exists(pid):
+            process = psutil.Process(pid)
+            memory_info = process.memory_info()
+            max_memory = memory_info.rss
+        else:
+            max_memory = None
         
         return stdout.decode(), stderr.decode(), runtime, max_memory, returncode
     
@@ -98,7 +98,6 @@ if st.button("Compile and Run"):
 
         compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
 
-        # Print compilation output for debugging
         st.write(f"Compilation stdout:\n{compile_stdout}")
         st.write(f"Compilation stderr:\n{compile_stderr}")
 
@@ -109,12 +108,13 @@ if st.button("Compile and Run"):
             total_test_cases = problems[selected_problem]["test_cases"]
 
             for idx in range(1, total_test_cases + 1):
-                input_url = f"https://github.com/PakinDioxide/Grader_St/raw/main/Problems/{selected_problem}/{idx}.in"
-                expected_output_file = f"https://github.com/PakinDioxide/Grader_St/raw/main/Problems/{selected_problem}/{idx}.out"
-
-                # Download input file
-                input_file = f"https://github.com/PakinDioxide/Grader_St/raw/main/Problems/{selected_problem}/{idx}.in"
+                input_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                input_file = f"{idx}.in"
                 download_file(input_url, input_file)
+
+                expected_output_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                expected_output_file = f"{idx}.out"
+                download_file(expected_output_url, expected_output_file)
 
                 output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
 
@@ -127,7 +127,10 @@ if st.button("Compile and Run"):
                 st.write(f"Output: {output}")
                 st.write(f"Errors: {errors}")
                 st.write(f"Runtime: {runtime} seconds")
-                st.write(f"Max Memory: {max_memory} Megabytes")
+                if max_memory is not None:
+                    st.write(f"Max Memory: {max_memory / (1024 * 1024)} Megabytes")  # Convert bytes to megabytes
+                else:
+                    st.write("Max Memory: N/A")
                 st.write(f"Return Code: {returncode}")
                 st.write(f"Grade: {grade_score}/1")
                 st.write("---")
