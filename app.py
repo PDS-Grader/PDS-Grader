@@ -84,6 +84,7 @@ problems = {
 selected_problem = st.selectbox("Select a problem", list(problems.keys()))
 
 st.write(f"### {selected_problem}")
+st.markdown(f"[Download Problem](https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{selected_problem}.pdf)")
 
 uploaded_file = st.file_uploader("Upload your C++ file", type=["cpp"])
 
@@ -99,8 +100,8 @@ if st.button("Compile and Run"):
 
         compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
 
-        st.write(f"Compilation stdout:\n{compile_stdout}")
-        st.write(f"Compilation stderr:\n{compile_stderr}")
+        # st.write(f"Compilation stdout:\n{compile_stdout}")
+        # st.write(f"Compilation stderr:\n{compile_stderr}")
 
         if compile_returncode != 0:
             st.error(f"Compilation failed:\n{compile_stderr}")
@@ -121,23 +122,23 @@ if st.button("Compile and Run"):
 
                 grade_score = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                 total_grade += grade_score
+                cw = "Correct Answer" if grade_score == 1 else "Wrong Answer"
+                st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+                # st.write(f"Input File: {input_file}")
+                # st.write(f"Expected Output File: {expected_output_file}")
+                # st.write(f"Output: {output}")
+                # st.write(f"Errors: {errors}")
+                # st.write(f"Runtime: {runtime} seconds")
+                # if max_memory is not None:
+                #     st.write(f"Max Memory: {max_memory / (1024 * 1024)} Megabytes")  # Convert bytes to megabytes
+                # else:
+                #     st.write("Max Memory: N/A")
+                # st.write(f"Return Code: {returncode}")
+                # st.write(f"Grade: {grade_score}/1")
+                # st.write("---")
 
-                st.write(f"### Test Case {idx}")
-                st.write(f"Input File: {input_file}")
-                st.write(f"Expected Output File: {expected_output_file}")
-                st.write(f"Output: {output}")
-                st.write(f"Errors: {errors}")
-                st.write(f"Runtime: {runtime} seconds")
-                if max_memory is not None:
-                    st.write(f"Max Memory: {max_memory / (1024 * 1024)} Megabytes")  # Convert bytes to megabytes
-                else:
-                    st.write("Max Memory: N/A")
-                st.write(f"Return Code: {returncode}")
-                st.write(f"Grade: {grade_score}/1")
-                st.write("---")
-
-            final_grade = total_grade / total_test_cases
-            st.write(f"## Final Grade: {final_grade}/{1 * total_test_cases}")
+            final_grade = total_grade * (100 / total_test_cases)
+            st.write(f"### Total : {round(final_grade)}/{100}")
 
             # Clean up
             if os.path.exists(source_path):
