@@ -24,33 +24,34 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
         if not os.path.exists(input_file):
             st.error(f"Input file {input_file} does not exist.")
             return "", "Input file does not exist.", None, None, -1
-        
+
         start_time = time.time()
         with open(input_file, 'r') as f:
             process = subprocess.Popen([executable_path], stdin=f, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             pid = process.pid
-        
-        try:
-            stdout, stderr = process.communicate(timeout=runtime_limit)
-            returncode = process.returncode
-        except subprocess.TimeoutExpired:
-            process.kill()
-            stdout, stderr = process.communicate()
-            returncode = -1
-        
+
+            # Retrieve memory usage before communicate
+            try:
+                process_info = psutil.Process(pid).memory_info()
+                max_memory = process_info.rss
+                if max_memory == 0:
+                    max_memory = None  # Treat 0 memory as not available
+            except psutil.NoSuchProcess:
+                max_memory = None  # Process might be terminated already
+
+            try:
+                stdout, stderr = process.communicate(timeout=runtime_limit)
+                returncode = process.returncode
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                returncode = -1
+
         end_time = time.time()
         runtime = end_time - start_time
-        
-        # Retrieve memory usage if process is still alive
-        if psutil.pid_exists(pid):
-            process = psutil.Process(pid)
-            memory_info = process.memory_info()
-            max_memory = memory_info.rss
-        else:
-            max_memory = None
-        
+
         return stdout.decode(), stderr.decode(), runtime, max_memory, returncode
-    
+
     except Exception as e:
         return "", f"Error: {str(e)}", 0, None, -1
 
