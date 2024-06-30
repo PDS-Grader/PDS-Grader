@@ -62,8 +62,7 @@ def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memo
     with open(expected_output_file, 'r') as f:
         expected_output = f.read().strip()
     
-    score = 1 if output.strip() == expected_output.strip() and runtime <= runtime_limit and max_memory <= memory_limit else 0
-    return score
+    return output.strip() == expected_output.strip(), runtime <= runtime_limit, max_memory <= memory_limit 
 
 st.title("C++ Code Grader")
 
@@ -120,9 +119,11 @@ if st.button("Compile and Run"):
 
                 output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
 
-                grade_score = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
-                total_grade += grade_score
-                cw = "Correct Answer" if grade_score == 1 else "Wrong Answer"
+                opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                total_grade += (opc and tle and mle)
+                cw = "Correct Answer" if opc == 1 else "Wrong Answer"
+                cw = "Time Limit Exceed" if tle == 0 else cw
+                cw = "Memory Limit Exceed" if mle == 0 else cw
                 st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
                 # st.write(f"Input File: {input_file}")
                 # st.write(f"Expected Output File: {expected_output_file}")
