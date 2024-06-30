@@ -34,10 +34,11 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
             try:
                 process_info = psutil.Process(pid).memory_info()
                 max_memory = process_info.rss
-                if max_memory == 0:
-                    max_memory = None  # Treat 0 memory as not available
+                # if max_memory == 0:
+                #     max_memory = None  # Treat 0 memory as not available
             except psutil.NoSuchProcess:
-                max_memory = None  # Process might be terminated already
+                # max_memory = None  # Process might be terminated already
+                max_memory = 0
 
             try:
                 stdout, stderr = process.communicate(timeout=runtime_limit)
@@ -64,7 +65,7 @@ def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memo
     
     return 1 if output.strip() == expected_output.strip() else 0, 1 if runtime <= runtime_limit else 0, 1 if max_memory <= memory_limit else 0
 
-st.title("C++ Code Grader")
+st.title("PDS Grader")
 
 problems = {
     "Pointing": {
@@ -83,9 +84,9 @@ problems = {
 selected_problem = st.selectbox("Select a problem", list(problems.keys()))
 
 st.write(f"### {selected_problem}")
-st.markdown(f"[Download Problem](https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{selected_problem}.pdf)")
+st.download_button("Download Problem", f"./Problems/{selected_problem}/{selected_problem}.pdf")
 
-uploaded_file = st.file_uploader("Upload your C++ file", type=["cpp"])
+uploaded_file = st.file_uploader("Upload your code (.c++ file only)", type=["cpp"])
 
 # Button to compile and run
 if st.button("Compile and Run"):
