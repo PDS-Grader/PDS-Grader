@@ -57,12 +57,12 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
 
 def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memory_limit):
     if runtime is None or max_memory is None:
-        return 0  # Return 0 grade if runtime or max_memory is None
+        return 0, 0, 0 # Return 0 grade if runtime or max_memory is None
     
     with open(expected_output_file, 'r') as f:
         expected_output = f.read().strip()
     
-    return output.strip() == expected_output.strip(), runtime <= runtime_limit, max_memory <= memory_limit 
+    return 1 if output.strip() == expected_output.strip() else 0, 1 if runtime <= runtime_limit else 0, 1 if max_memory <= memory_limit else 0
 
 st.title("C++ Code Grader")
 
