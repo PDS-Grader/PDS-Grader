@@ -124,7 +124,7 @@ if st.button("Compile and Run"):
                 cw = "Correct Answer" if opc == 1 else "Wrong Answer"
                 cw = "Time Limit Exceed" if tle == 0 else cw
                 cw = "Memory Limit Exceed" if mle == 0 else cw
-                st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+                st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round((max_memory / (1024 * 1024)) * 1000)} kB")
                 # st.write(f"Input File: {input_file}")
                 # st.write(f"Expected Output File: {expected_output_file}")
                 # st.write(f"Output: {output}")
