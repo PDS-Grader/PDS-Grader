@@ -110,12 +110,12 @@ if st.button("Compile and Run"):
 
             for idx in range(1, total_test_cases + 1):
                 input_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.in"
-                input_file = f"{idx}.in"
-                download_file(input_url, input_file)
+                input_file = f"./Problems/{selected_problem}/{idx}.in"
+                # download_file(input_url, input_file)
 
                 expected_output_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.out"
-                expected_output_file = f"{idx}.out"
-                download_file(expected_output_url, expected_output_file)
+                expected_output_file = f"Problems/{selected_problem}/{idx}.out"
+                # download_file(expected_output_url, expected_output_file)
 
                 output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
 
