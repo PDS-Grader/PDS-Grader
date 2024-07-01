@@ -4,6 +4,63 @@ import time
 import os
 import requests
 import psutil
+import sqlite3
+import bcrypt
+
+# Function to check credentials
+def check_credentials(username, password):
+    username = username.lower()
+    try:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('SELECT password_hash FROM users WHERE username = ?', (username,))
+        result = c.fetchone()
+    except Exception as e:
+        st.error(f"Error checking credentials: {e}")
+        return False
+    finally:
+        conn.close()
+
+    if result:
+        password_hash = result[0]
+        if isinstance(password_hash, str):
+            password_hash = password_hash.encode('utf-8')
+        return bcrypt.checkpw(password.encode('utf-8'), password_hash)
+    return False
+
+# Function to add a new user
+def add_user(username, password):
+    username = username.lower()
+    try:
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, password_hash.decode('utf-8')))
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error adding user: {e}")
+    finally:
+        conn.close()
+
+# Check if the user already exists
+def user_exists(username):
+    username = username.lower()
+    try:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('SELECT 1 FROM users WHERE username = ?', (username,))
+        result = c.fetchone()
+    except Exception as e:
+        st.error(f"Error checking user existence: {e}")
+        return False
+    finally:
+        conn.close()
+    return result is not None
+
+# Callback function to enforce lowercase
+def to_lowercase(key):
+    if key in st.session_state:
+        st.session_state[key] = st.session_state[key].lower()
 
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
@@ -67,6 +124,60 @@ def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memo
 
 st.title("PDS Grader")
 
+def acc():   
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+
+    if 'username' not in st.session_state:
+        st.session_state['username'] = ""
+
+    if st.session_state['logged_in']:
+        st.sidebar.write(f"# Welcome! {st.session_state['username']}")
+        if st.sidebar.button("Logout"):
+            st.session_state['logged_in'] = False
+            st.session_state['username'] = ""
+            st.experimental_rerun()
+        # Add your main application logic here
+    else:
+        # Sidebar for navigation
+        menu = ["Login", "Register"]
+        choice = st.sidebar.radio("Menu", menu)
+
+        if choice == "Login":
+            st.sidebar.subheader("Login Section")
+
+            username = st.sidebar.text_input("Username", key="login_username", on_change=to_lowercase, args=("login_username",))
+            password = st.sidebar.text_input("Password", type="password", key="login_password")
+            login_button = st.sidebar.button("Login")
+
+            if login_button:
+                if check_credentials(username, password):
+                    st.session_state['logged_in'] = True
+                    st.session_state['username'] = username
+                    st.experimental_rerun()
+                else:
+                    st.sidebar.error("Invalid username or password")
+
+        elif choice == "Register":
+            st.sidebar.subheader("Create New Account")
+
+            new_username = st.sidebar.text_input("New Username", key="register_username", on_change=to_lowercase, args=("register_username",))
+            new_password = st.sidebar.text_input("New Password", type="password", key="register_password")
+            register_button = st.sidebar.button("Register")
+
+            if register_button:
+                if user_exists(new_username):
+                    st.sidebar.error("Username already exists. Please choose a different username.")
+                else:
+                    add_user(new_username, new_password)
+                    st.sidebar.success("You have successfully created an account!")
+                    st.sidebar.info("Go to the Login menu to log in.")
+        
+if __name__ == "__main__":
+    acc()
+            
+# Grader
+
 problems = {
     "Pointing": {
         "test_cases": 10,
@@ -84,13 +195,16 @@ problems = {
 selected_problem = st.selectbox("Select a problem", list(problems.keys()))
 
 st.write(f"### {selected_problem}")
-st.download_button("Download Problem", f"./Problems/{selected_problem}/{selected_problem}.pdf")
+with open(f"./Problems/{selected_problem}/{selected_problem}.pdf", "rb") as pdf:
+    st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem}.pdf")
 
-uploaded_file = st.file_uploader("Upload your code (.c++ file only)", type=["cpp"])
+uploaded_file = st.file_uploader("Upload your code (.cpp file only)", type=["cpp"])
 
 # Button to compile and run
-if st.button("Compile and Run"):
-    if uploaded_file is not None:
+if st.button("Submit Code"):
+    if not st.session_state['logged_in']:
+        st.error("Please login before submitting")
+    elif uploaded_file is not None:
         source_code = uploaded_file.read()
         source_path = "submitted_code.cpp"
         executable_path = "./submitted_code"
@@ -147,3 +261,6 @@ if st.button("Compile and Run"):
                 os.remove(source_path)
             if os.path.exists(executable_path):
                 os.remove(executable_path)
+    else:
+        st.error("No file uploaded")
+
