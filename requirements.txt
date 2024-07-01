@@ -1,1 +1,7 @@
+streamlit
+requests
 psutil
+pandas
+sqlite3
+bcrypt
+st-aggrid
