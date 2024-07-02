@@ -182,7 +182,7 @@ if st.session_state['logged_in']:
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        st.experimental_rerun()
+        st.rerun()
     # Add your main application logic here
 else:
     # Sidebar for navigation
@@ -200,7 +200,7 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
