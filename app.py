@@ -254,26 +254,30 @@ if selected_problem == "Submissions":
     grid_options = gb.build()
 
     # Display the table with AgGrid
-    AgGrid(data, gridOptions=grid_options, enable_enterprise_modules=True, allow_unsafe_jscode=True)
+    AgGrid(data, gridOptions=grid_options)  
     
 else:
     # Show problem PDF and allow file upload
     with open(f"./Problems/{selected_problem}/{selected_problem}.pdf", "rb") as pdf:
         st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem}.pdf")
 
-    uploaded_file = st.file_uploader("Upload your code (.cpp file only)", type=["cpp"])
+    # File uploader for code submission
+    uploaded_file = st.file_uploader("Upload code file (.cpp)", type=["cpp"])
+
+    # Text area to input the code
+    code = st.text_area("Or enter your code here", height=300)
 
     # Button to compile and run
     if st.button("Submit Code"):
         if not st.session_state['logged_in']:
             st.error("Please login before submitting")
         elif uploaded_file is not None:
-            source_code = uploaded_file.read()
-            source_path = "submitted_code.cpp"
-            executable_path = "./submitted_code"
-
+            # Save the uploaded file
+            source_path = "uploaded_code.cpp"
             with open(source_path, "wb") as f:
-                f.write(source_code)
+                f.write(uploaded_file.getvalue())
+
+            executable_path = "./submitted_code"
 
             compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
 
@@ -286,11 +290,57 @@ else:
                 mxmem = 0
 
                 for idx in range(1, total_test_cases + 1):
-                    input_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
                     input_file = f"./Problems/{selected_problem}/{idx}.in"
                     # download_file(input_url, input_file)
 
-                    expected_output_url = f"https://raw.githubusercontent.com/PakinDioxide/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
+                    # download_file(expected_output_url, expected_output_file)
+
+                    output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    mxrt = max(mxrt, runtime)
+                    mxmem = max(mxmem, max_memory)
+                    opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    total_grade += (opc and tle and mle)
+                    cw = "Correct Answer" if opc == 1 else "Wrong Answer"
+                    cw = "Time Limit Exceed" if tle == 0 else cw
+                    cw = "Memory Limit Exceed" if mle == 0 else cw
+                    st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+
+                final_grade = total_grade * (100 / total_test_cases)
+                st.write(f"### Total : {round(final_grade)}/{100}")
+                
+                add_row(st.session_state['username'], selected_problem, f"{round(final_grade)}/{100}", f"{round(mxrt * 1000)} ms", f"{round(mxmem / (1024 * 1024) * 1000)} kB")
+
+                # Clean up
+                if os.path.exists(source_path):
+                    os.remove(source_path)
+                if os.path.exists(executable_path):
+                    os.remove(executable_path)
+        elif code:
+            source_path = "submitted_code.cpp"
+            executable_path = "./submitted_code"
+
+            with open(source_path, "w") as f:
+                f.write(code)
+
+            compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
+
+            if compile_returncode != 0:
+                st.error(f"Compilation failed:\n{compile_stderr}")
+            else:
+                total_grade = 0
+                total_test_cases = problems[selected_problem]["test_cases"]
+                mxrt = 0
+                mxmem = 0
+
+                for idx in range(1, total_test_cases + 1):
+                    input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    input_file = f"./Problems/{selected_problem}/{idx}.in"
+                    # download_file(input_url, input_file)
+
+                    expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
                     expected_output_file = f"Problems/{selected_problem}/{idx}.out"
                     # download_file(expected_output_url, expected_output_file)
 
@@ -315,7 +365,7 @@ else:
                 if os.path.exists(executable_path):
                     os.remove(executable_path)
         else:
-            st.error("No file uploaded")
+            st.error("No code submitted")
 
 # Close the database connection when done
 conn.close()
