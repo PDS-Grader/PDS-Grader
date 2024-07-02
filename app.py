@@ -9,6 +9,7 @@ import bcrypt
 import pandas as pd
 from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder
+import pytz
 
 # Function to check credentials
 def check_credentials(username, password):
@@ -157,7 +158,8 @@ def load_data():
 
 # Add a new row to the database
 def add_row(name, problem, score, runtime, memory):
-    datetime_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timezone = pytz.timezone('Asia/Bangkok')
+    datetime_now = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
     with sqlite3.connect('submissions.db') as conn:
         c = conn.cursor()
         c.execute('''
