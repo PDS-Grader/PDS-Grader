@@ -184,7 +184,7 @@ if st.session_state['logged_in']:
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        st.experimental_rerun()  # Experimental rerun to reset session state
+        st.rerun()  # Experimental rerun to reset session state
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -201,7 +201,7 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.experimental_rerun()  # Experimental rerun to reset session state
+                st.rerun()  # Experimental rerun to reset session state
             else:
                 st.sidebar.error("Invalid username or password")
 
