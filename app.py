@@ -171,21 +171,20 @@ def add_row(name, problem, score, runtime, memory):
 # Main application logic
 st.title("PDS Grader")
 
-# Session state initialization
+# Session state initialization and management
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 
 if 'username' not in st.session_state:
     st.session_state['username'] = ""
 
-# Handle logged-in state
+# Handle login/logout actions
 if st.session_state['logged_in']:
     st.sidebar.write(f"# Welcome! {st.session_state['username']}")
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        st.rerun()
-    # Add your main application logic here
+        st.experimental_rerun()  # Experimental rerun to reset session state
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -202,7 +201,7 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.rerun()
+                st.experimental_rerun()  # Experimental rerun to reset session state
             else:
                 st.sidebar.error("Invalid username or password")
 
