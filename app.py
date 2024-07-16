@@ -23,11 +23,11 @@ COOKIE_PASSWORD = os.getenv('COOKIE_PASSWORD')
 # Check if the COOKIE_KEY and COOKIE_PASSWORD meet the required criteria
 if not COOKIE_KEY or len(COOKIE_KEY) != 64:
     st.error("The COOKIE_KEY must be a 64-character key in hexadecimal format.")
-    st.stop()
+    # st.stop()
 
 if not COOKIE_PASSWORD:
     st.error("The COOKIE_PASSWORD must be set.")
-    st.stop()
+    # st.stop()
 
 # Initialize the cookies manager
 cookies = EncryptedCookieManager(
