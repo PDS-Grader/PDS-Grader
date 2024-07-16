@@ -214,9 +214,12 @@ if st.session_state['logged_in']:
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        cookies.delete("logged_in")
-        cookies.delete("username")
-        cookies.save()
+        try:
+            cookies.delete("logged_in")
+            cookies.delete("username")
+            cookies.save()
+        except Exception as e:
+            st.error(f"Error during logout: {e}")
         st.experimental_rerun()
 else:
     # Sidebar for navigation
