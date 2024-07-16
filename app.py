@@ -11,7 +11,6 @@ from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
-from dotenv import load_dotenv
 
 # Load environment variables from a .env file
 load_dotenv('.env')
@@ -39,7 +38,7 @@ cookies = EncryptedCookieManager(
 if not cookies.ready():
     st.error("Failed to initialize encrypted cookies.")
     st.stop()
-    
+
 # Load login state from cookies
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = cookies.get("logged_in") == "true"
@@ -51,15 +50,13 @@ if 'username' not in st.session_state:
 def check_credentials(username, password):
     username = username.lower()
     try:
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('SELECT password_hash FROM users WHERE username = ?', (username,))
-        result = c.fetchone()
+        with sqlite3.connect('users.db') as conn:
+            c = conn.cursor()
+            c.execute('SELECT password_hash FROM users WHERE username = ?', (username,))
+            result = c.fetchone()
     except Exception as e:
         st.error(f"Error checking credentials: {e}")
         return False
-    finally:
-        conn.close()
 
     if result:
         password_hash = result[0]
@@ -73,28 +70,24 @@ def add_user(username, password):
     username = username.lower()
     try:
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, password_hash.decode('utf-8')))
-        conn.commit()
+        with sqlite3.connect('users.db') as conn:
+            c = conn.cursor()
+            c.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, password_hash.decode('utf-8')))
+            conn.commit()
     except Exception as e:
         st.error(f"Error adding user: {e}")
-    finally:
-        conn.close()
 
 # Check if the user already exists
 def user_exists(username):
     username = username.lower()
     try:
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('SELECT 1 FROM users WHERE username = ?', (username,))
-        result = c.fetchone()
+        with sqlite3.connect('users.db') as conn:
+            c = conn.cursor()
+            c.execute('SELECT 1 FROM users WHERE username = ?', (username,))
+            result = c.fetchone()
     except Exception as e:
         st.error(f"Error checking user existence: {e}")
         return False
-    finally:
-        conn.close()
     return result is not None
 
 # Callback function to enforce lowercase
@@ -102,6 +95,31 @@ def to_lowercase(key):
     if key in st.session_state:
         st.session_state[key] = st.session_state[key].lower().replace(" ", "")
 
+# Login form
+if not st.session_state['logged_in']:
+    st.title("Login")
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if check_credentials(username, password):
+            st.session_state['logged_in'] = True
+            st.session_state['username'] = username
+            cookies.set("logged_in", "true")
+            cookies.set("username", username)
+            st.experimental_rerun()
+        else:
+            st.error("Invalid username or password.")
+else:
+    st.title(f"Welcome, {st.session_state['username']}")
+    if st.button("Logout"):
+        st.session_state['logged_in'] = False
+        st.session_state['username'] = ""
+        cookies.delete("logged_in")
+        cookies.delete("username")
+        st.experimental_rerun()
+        
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
