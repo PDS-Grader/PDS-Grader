@@ -220,7 +220,7 @@ if st.session_state['logged_in']:
             cookies.save()
         except Exception as e:
             st.error(f"Error during logout: {e}")
-        st.experimental_rerun()
+        st.rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -243,7 +243,7 @@ else:
                     cookies.save()
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
