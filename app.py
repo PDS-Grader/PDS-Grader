@@ -237,9 +237,12 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                cookies.set("logged_in", "true")
-                cookies.set("username", username)
-                cookies.save()
+                try:
+                    cookies.set("logged_in", "true")
+                    cookies.set("username", username)
+                    cookies.save()
+                except Exception as e:
+                    st.error(f"Error setting cookies: {e}")
                 st.experimental_rerun()
             else:
                 st.sidebar.error("Invalid username or password")
