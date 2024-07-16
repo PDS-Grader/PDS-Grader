@@ -109,6 +109,7 @@ if not st.session_state['logged_in']:
             st.session_state['username'] = username
             cookies.set("logged_in", "true")
             cookies.set("username", username)
+            cookies.save()
             st.experimental_rerun()
         else:
             st.error("Invalid username or password.")
@@ -119,6 +120,7 @@ else:
         st.session_state['username'] = ""
         cookies.delete("logged_in")
         cookies.delete("username")
+        cookies.save()
         st.experimental_rerun()
         
 def compile_cpp(source_path, output_path):
