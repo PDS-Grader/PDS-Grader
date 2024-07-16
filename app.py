@@ -95,33 +95,6 @@ def user_exists(username):
 def to_lowercase(key):
     if key in st.session_state:
         st.session_state[key] = st.session_state[key].lower().replace(" ", "")
-
-# Login form
-if not st.session_state['logged_in']:
-    st.title("Login")
-
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if check_credentials(username, password):
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = username
-            cookies.set("logged_in", "true")
-            cookies.set("username", username)
-            cookies.save()
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password.")
-else:
-    st.title(f"Welcome, {st.session_state['username']}")
-    if st.button("Logout"):
-        st.session_state['logged_in'] = False
-        st.session_state['username'] = ""
-        cookies.delete("logged_in")
-        cookies.delete("username")
-        cookies.save()
-        st.experimental_rerun()
         
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
@@ -241,7 +214,10 @@ if st.session_state['logged_in']:
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        st.rerun()  # Experimental rerun to reset session state
+        cookies.delete("logged_in")
+        cookies.delete("username")
+        cookies.save()
+        st.experimental_rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -258,7 +234,10 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                st.rerun()  # Experimental rerun to reset session state
+                cookies.set("logged_in", "true")
+                cookies.set("username", username)
+                cookies.save()
+                st.experimental_rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
@@ -276,7 +255,7 @@ else:
                 add_user(new_username, new_password)
                 st.sidebar.success("You have successfully created an account!")
                 st.sidebar.info("Go to the Login menu to log in.")
-
+                
 # Problem definitions
 problems = {
     "Submissions": {
