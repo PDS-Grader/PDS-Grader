@@ -11,6 +11,7 @@ from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
+from dotenv import load_dotenv
 
 # Load environment variables from a .env file
 load_dotenv('.env')
