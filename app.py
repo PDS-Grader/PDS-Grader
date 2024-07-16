@@ -10,6 +10,42 @@ import pandas as pd
 from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pytz
+from streamlit_cookies_manager import EncryptedCookieManager
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv('.env')
+
+# Fetch the keys from environment variables
+COOKIE_KEY = os.getenv('COOKIE_KEY')
+COOKIE_PASSWORD = os.getenv('COOKIE_PASSWORD')
+
+# Check if the COOKIE_KEY and COOKIE_PASSWORD meet the required criteria
+if not COOKIE_KEY or len(COOKIE_KEY) != 64:
+    st.error("The COOKIE_KEY must be a 64-character key in hexadecimal format.")
+    st.stop()
+
+if not COOKIE_PASSWORD:
+    st.error("The COOKIE_PASSWORD must be set.")
+    st.stop()
+
+# Initialize the cookies manager
+cookies = EncryptedCookieManager(
+    prefix="myapp_",  # unique prefix to distinguish cookies used by this app
+    password=COOKIE_PASSWORD  # password for encrypting cookies from environment variables
+)
+
+# Ensure cookies are loaded
+if not cookies.ready():
+    st.error("Failed to initialize encrypted cookies.")
+    st.stop()
+    
+# Load login state from cookies
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = cookies.get("logged_in") == "true"
+
+if 'username' not in st.session_state:
+    st.session_state['username'] = cookies.get("username", "")
 
 # Function to check credentials
 def check_credentials(username, password):
