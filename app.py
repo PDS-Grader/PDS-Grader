@@ -109,7 +109,7 @@ def user_exists(username):
 # Callback function to enforce lowercase
 def to_lowercase(key):
     if key in st.session_state:
-        st.session_state[key] = st.session_state[key].lower().replace(" ", "")[0, 20]
+        st.session_state[key] = st.session_state[key].lower().replace(" ", "")[0 : 20]
 
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
@@ -272,6 +272,10 @@ else:
         if register_button:
             if user_exists(new_username):
                 st.sidebar.error("Username already exists. Please choose a different username.")
+            else if len(new_username) == 0:
+                st.sidebar.error("Please enter a username.")
+            else if len(new_password) == 0:
+                st.sidebar.error("Please enter a password.")
             else:
                 add_user(new_username, new_password)
                 st.sidebar.success("You have successfully created an account!")
