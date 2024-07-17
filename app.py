@@ -13,6 +13,17 @@ import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
 
+conn = sqlite3.connect('users.db')
+c = conn.cursor()
+
+c.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL
+    )
+''')
+conn.commit()
+
 # Load environment variables from a .env file
 load_dotenv('.env')
 
@@ -155,17 +166,6 @@ def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memo
         expected_output = f.read().strip()
     
     return 1 if output.strip() == expected_output.strip() else 0, 1 if runtime <= runtime_limit else 0, 1 if max_memory <= memory_limit else 0
-
-conn = sqlite3.connect('users.db')
-c = conn.cursor()
-
-c.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password_hash TEXT NOT NULL
-    )
-''')
-conn.commit()
 
 # Initialize SQLite database for submissions
 conn = sqlite3.connect('submissions.db')
