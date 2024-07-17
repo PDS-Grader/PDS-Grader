@@ -353,11 +353,11 @@ else:
                 mxmem = 0
 
                 for idx in range(1, total_test_cases + 1):
-                    input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
                     input_file = f"./Problems/{selected_problem}/{idx}.in"
                     # download_file(input_url, input_file)
 
-                    expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
                     expected_output_file = f"Problems/{selected_problem}/{idx}.out"
                     # download_file(expected_output_url, expected_output_file)
 
@@ -399,11 +399,11 @@ else:
                 mxmem = 0
 
                 for idx in range(1, total_test_cases + 1):
-                    input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
                     input_file = f"./Problems/{selected_problem}/{idx}.in"
                     # download_file(input_url, input_file)
 
-                    expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
                     expected_output_file = f"Problems/{selected_problem}/{idx}.out"
                     # download_file(expected_output_url, expected_output_file)
 
@@ -433,4 +433,4 @@ else:
 # Close the database connection when done
 conn.close()
 
-st.write(os.listdir("/app"))
+st.write(os.listdir("/."))
