@@ -37,8 +37,8 @@ cookies = EncryptedCookieManager(
 
 # Ensure cookies are loaded
 if not cookies.ready():
-    st.error("Failed to initialize encrypted cookies.")
-    # st.stop()
+    cookies.initialize()
+    st.stop()
 
 # Load login state from cookies
 if 'logged_in' not in st.session_state:
@@ -95,7 +95,7 @@ def user_exists(username):
 def to_lowercase(key):
     if key in st.session_state:
         st.session_state[key] = st.session_state[key].lower().replace(" ", "")
-        
+
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
