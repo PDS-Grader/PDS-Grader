@@ -37,7 +37,7 @@ cookies = EncryptedCookieManager(
 
 # Ensure cookies are loaded
 if not cookies.ready():
-    cookies.initialize()
+    st.error("Failed to initialize encrypted cookies.")
     st.stop()
 
 # Load login state from cookies
@@ -235,7 +235,7 @@ if st.session_state['logged_in']:
             cookies.save()  # Save changes after deleting cookies
         except Exception as e:
             st.error(f"Error during logout: {e}")
-        st.experimental_rerun()
+        st.rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -258,7 +258,7 @@ else:
                     cookies.save()  # Save changes after setting cookies
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
