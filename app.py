@@ -166,7 +166,6 @@ c.execute('''
     )
 ''')
 conn.commit()
-conn.close()
 
 # Initialize SQLite database for submissions
 conn = sqlite3.connect('submissions.db')
