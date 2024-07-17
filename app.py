@@ -37,7 +37,7 @@ cookies = EncryptedCookieManager(
 
 # Ensure cookies are loaded
 if not cookies.ready():
-    # cookies.initialize()
+    cookies.initialize()
     st.stop()
 
 # Load login state from cookies
@@ -216,12 +216,12 @@ def add_row(name, problem, score, runtime, memory):
 # Main application logic
 st.title("PDS Grader")
 
-# Session state initialization and management
+# Load login state from cookies
 if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
+    st.session_state['logged_in'] = cookies.get("logged_in") == "true"
 
 if 'username' not in st.session_state:
-    st.session_state['username'] = ""
+    st.session_state['username'] = cookies.get("username", "")
 
 # Handle login/logout actions
 if st.session_state['logged_in']:
@@ -232,10 +232,10 @@ if st.session_state['logged_in']:
         try:
             cookies.delete("logged_in")
             cookies.delete("username")
-            cookies.save()
+            cookies.save()  # Save changes after deleting cookies
         except Exception as e:
             st.error(f"Error during logout: {e}")
-        st.rerun()
+        st.experimental_rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -255,10 +255,10 @@ else:
                 try:
                     cookies.set("logged_in", "true")
                     cookies.set("username", username)
-                    cookies.save()
+                    cookies.save()  # Save changes after setting cookies
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
