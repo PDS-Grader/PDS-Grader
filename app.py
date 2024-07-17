@@ -433,4 +433,4 @@ else:
 # Close the database connection when done
 conn.close()
 
-st.write(os.listdir("/"))
+st.write(os.listdir("/app"))
