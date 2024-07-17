@@ -37,7 +37,7 @@ cookies = EncryptedCookieManager(
 
 # Ensure cookies are loaded
 if not cookies.ready():
-    cookies.initialize()
+    # cookies.initialize()
     st.stop()
 
 # Load login state from cookies
@@ -432,5 +432,3 @@ else:
 
 # Close the database connection when done
 conn.close()
-
-st.write(os.listdir("/."))
