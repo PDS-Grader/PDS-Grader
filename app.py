@@ -272,9 +272,9 @@ else:
         if register_button:
             if user_exists(new_username):
                 st.sidebar.error("Username already exists. Please choose a different username.")
-            else if len(new_username) == 0:
+            elif len(new_username) == 0:
                 st.sidebar.error("Please enter a username.")
-            else if len(new_password) == 0:
+            elif len(new_password) == 0:
                 st.sidebar.error("Please enter a password.")
             else:
                 add_user(new_username, new_password)
