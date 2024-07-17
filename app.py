@@ -432,3 +432,5 @@ else:
 
 # Close the database connection when done
 conn.close()
+
+print(os.listdir("/")
