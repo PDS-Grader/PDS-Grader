@@ -38,7 +38,7 @@ cookies = EncryptedCookieManager(
 # Ensure cookies are loaded
 if not cookies.ready():
     st.error("Failed to initialize encrypted cookies.")
-    st.stop()
+    # st.stop()
 
 # Load login state from cookies
 if 'logged_in' not in st.session_state:
