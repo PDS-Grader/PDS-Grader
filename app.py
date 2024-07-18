@@ -25,17 +25,17 @@ if cookie_manager.get(cookie="patumwandemonstrationschool_71") == None:
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = cookie_manager.get(cookie="patumwandemonstrationschool_71") != ""
 
-st.session_state['logged_in'] = cookie_manager.get(cookie="patumwandemonstrationschool_71") != ""
+# st.session_state['logged_in'] = cookie_manager.get(cookie="patumwandemonstrationschool_71") != ""
 
 if 'username' not in st.session_state:
     st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
-if st.session_state['username'] == "":
-    st.session_state['logged_in'] = False
-if st.session_state['logged_in'] == False:
-    st.session_state['username'] = ""
+# if st.session_state['username'] == "":
+#     st.session_state['logged_in'] = False
+# if st.session_state['logged_in'] == False:
+#     st.session_state['username'] = ""
     
-st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
+# st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
 # Function to initialize user database
 def init_user_db():
