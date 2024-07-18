@@ -17,13 +17,15 @@ def get_manager():
 
 cookie_manager = get_manager()
 
-st.write(cookie_manager)
-
 if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = cookie_manager.get(cookie="logged_in") == "true"
-    
+    st.session_state['logged_in'] = not cookie_manager.get(cookie="patumwandemonstrationschool_71") == ""
+
+st.session_state['logged_in'] = not cookie_manager.get(cookie="patumwandemonstrationschool_71") == ""
+
 if 'username' not in st.session_state:
-    st.session_state['username'] = cookie_manager.get(cookie="username")
+    st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
+
+st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
 # Function to initialize user database
 def init_user_db():
@@ -201,8 +203,7 @@ if st.session_state['logged_in']:
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
         try:
-            cookie_manager.delete("logged_in")
-            cookie_manager.delete("username")
+            cookie_manager.set("patumwandemonstrationschool_71", "")
         except Exception as e:
             st.error(f"Error during logout: {e}")
 else:
@@ -222,8 +223,7 @@ else:
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
                 try:
-                    cookie_manager.set("logged_in", "true")
-                    cookie_manager.set("username", username)
+                    cookie_manager.set("patumwandemonstrationschool_71", username)
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
             else:
@@ -239,6 +239,8 @@ else:
         if register_button:
             if user_exists(new_username):
                 st.sidebar.error("Username already exists. Please choose a different username.")
+            elif new_username.isnumeric():
+                st.sidebar.error("Username must contain at least one alphabet.")
             elif len(new_username) == 0:
                 st.sidebar.error("Please enter a username.")
             elif len(new_password) == 0:
@@ -360,44 +362,47 @@ else:
                 f.write(code)
 
             compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
+            
+            total_grade = 0
+            total_test_cases = problems[selected_problem]["test_cases"]
+            mxrt = 0
+            mxmem = 0
 
+            for idx in range(1, total_test_cases + 1):
+                if compile_returncode != 0:
+                    st.write(f" Test Case {idx}\t: Compilation Error - 0 ms - 0 kB")
+                    continue
+                # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                input_file = f"./Problems/{selected_problem}/{idx}.in"
+                # download_file(input_url, input_file)
+
+                # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                expected_output_file = f"Problems/{selected_problem}/{idx}.out"
+                # download_file(expected_output_url, expected_output_file)
+
+                output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                mxrt = max(mxrt, runtime)
+                mxmem = max(mxmem, max_memory)
+                opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                total_grade += (opc and tle and mle)
+                cw = "Correct Answer" if opc == 1 else "Wrong Answer"
+                cw = "Time Limit Exceed" if tle == 0 else cw
+                cw = "Memory Limit Exceed" if mle == 0 else cw
+                st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+
+            final_grade = total_grade * (100 / total_test_cases)
+            st.write(f"### Total : {round(final_grade)}/{100}")
+            
             if compile_returncode != 0:
-                st.error(f"Compilation failed:\n{compile_stderr}")
+                add_row(st.session_state['username'], selected_problem, "Compilation Error", f"{round(mxrt * 1000)} ms", f"{round(mxmem / (1024 * 1024) * 1000)} kB")
             else:
-                total_grade = 0
-                total_test_cases = problems[selected_problem]["test_cases"]
-                mxrt = 0
-                mxmem = 0
-
-                for idx in range(1, total_test_cases + 1):
-                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
-                    input_file = f"./Problems/{selected_problem}/{idx}.in"
-                    # download_file(input_url, input_file)
-
-                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
-                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
-                    # download_file(expected_output_url, expected_output_file)
-
-                    output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
-                    mxrt = max(mxrt, runtime)
-                    mxmem = max(mxmem, max_memory)
-                    opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
-                    total_grade += (opc and tle and mle)
-                    cw = "Correct Answer" if opc == 1 else "Wrong Answer"
-                    cw = "Time Limit Exceed" if tle == 0 else cw
-                    cw = "Memory Limit Exceed" if mle == 0 else cw
-                    st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
-
-                final_grade = total_grade * (100 / total_test_cases)
-                st.write(f"### Total : {round(final_grade)}/{100}")
-                
                 add_row(st.session_state['username'], selected_problem, f"{round(final_grade)}/{100}", f"{round(mxrt * 1000)} ms", f"{round(mxmem / (1024 * 1024) * 1000)} kB")
 
-                # Clean up
-                if os.path.exists(source_path):
-                    os.remove(source_path)
-                if os.path.exists(executable_path):
-                    os.remove(executable_path)
+            # Clean up
+            if os.path.exists(source_path):
+                os.remove(source_path)
+            if os.path.exists(executable_path):
+                os.remove(executable_path)
         else:
             st.error("No code submitted")
 
