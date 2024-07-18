@@ -17,6 +17,8 @@ def get_manager():
 
 cookie_manager = get_manager()
 
+st.write(cookie_manager.get_all())
+
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = cookie_manager.get(cookie="patumwandemonstrationschool_71") != ""
 
