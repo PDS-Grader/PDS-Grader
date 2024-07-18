@@ -25,6 +25,9 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
+if st.session_state['username'] == "":
+    st.session_state['logged_in'] = False
+    
 # st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
 # Function to initialize user database
