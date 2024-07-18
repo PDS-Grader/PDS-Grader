@@ -197,7 +197,7 @@ def add_row(name, problem, score, runtime, memory):
 st.title("PDS Grader")
 
 # Handle login/logout actions
-if st.session_state['logged_in']:
+if st.session_state['logged_in'] and st.session_state['username'] != "":
     st.sidebar.write(f"# Welcome! {st.session_state['username']}")
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
