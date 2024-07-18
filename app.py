@@ -10,42 +10,18 @@ import pandas as pd
 from datetime import datetime
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pytz
-from streamlit_cookies_manager import EncryptedCookieManager
-from dotenv import load_dotenv
+import extra_streamlit_components as stx
 
-# Load environment variables from a .env file
-load_dotenv('.env')
+def get_manager():
+    return stx.CookieManager()
 
-# Fetch the keys from environment variables
-COOKIE_KEY = os.getenv('COOKIE_KEY')
-COOKIE_PASSWORD = os.getenv('COOKIE_PASSWORD')
+cookie_manager = get_manager()
 
-# Check if the COOKIE_KEY and COOKIE_PASSWORD meet the required criteria
-if not COOKIE_KEY or len(COOKIE_KEY) != 64:
-    st.error("The COOKIE_KEY must be a 64-character key in hexadecimal format.")
-    st.stop()
-
-if not COOKIE_PASSWORD:
-    st.error("The COOKIE_PASSWORD must be set.")
-    st.stop()
-
-# Initialize the cookies manager
-cookies = EncryptedCookieManager(
-    prefix="myapp_",  # unique prefix to distinguish cookies used by this app
-    password=COOKIE_PASSWORD  # password for encrypting cookies from environment variables
-)
-
-# Ensure cookies are loaded
-if not cookies.ready():
-    st.error("Failed to initialize encrypted cookies.")
-    st.stop()
-
-# Load login state from cookies
 if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = cookies.get("logged_in") == "true"
-
+    st.session_state['logged_in'] = cookie_manager.get(cookie="logged_in") == "true"
+    
 if 'username' not in st.session_state:
-    st.session_state['username'] = cookies.get("username", "")
+    st.session_state['username'] = cookie_manager.get(cookie="username")
 
 # Function to initialize user database
 def init_user_db():
@@ -216,13 +192,6 @@ def add_row(name, problem, score, runtime, memory):
 # Main application logic
 st.title("PDS Grader")
 
-# Load login state from cookies
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = cookies.get("logged_in") == "true"
-
-if 'username' not in st.session_state:
-    st.session_state['username'] = cookies.get("username", "")
-
 # Handle login/logout actions
 if st.session_state['logged_in']:
     st.sidebar.write(f"# Welcome! {st.session_state['username']}")
@@ -230,12 +199,10 @@ if st.session_state['logged_in']:
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
         try:
-            cookies.delete("logged_in")
-            cookies.delete("username")
-            cookies.save()  # Save changes after deleting cookies
+            cookie_manager.delete("logged_in")
+            cookie_manager.delete("username")
         except Exception as e:
             st.error(f"Error during logout: {e}")
-        st.rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -253,12 +220,10 @@ else:
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
                 try:
-                    cookies.set("logged_in", "true")
-                    cookies.set("username", username)
-                    cookies.save()  # Save changes after setting cookies
+                    cookie_manager.set("logged_in", "true")
+                    cookie_manager.set("username", username)
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
-                st.rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
