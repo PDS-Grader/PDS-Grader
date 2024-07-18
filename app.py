@@ -206,6 +206,7 @@ if st.session_state['logged_in']:
             cookie_manager.set("patumwandemonstrationschool_71", "")
         except Exception as e:
             st.error(f"Error during logout: {e}")
+        st.rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -226,6 +227,7 @@ else:
                     cookie_manager.set("patumwandemonstrationschool_71", username)
                 except Exception as e:
                     st.error(f"Error setting cookies: {e}")
+                st.rerun()
             else:
                 st.sidebar.error("Invalid username or password")
 
