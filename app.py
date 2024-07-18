@@ -27,7 +27,7 @@ if 'logged_in' not in st.session_state:
 
 # st.session_state['logged_in'] = cookie_manager.get(cookie="patumwandemonstrationschool_71") != ""
 
-if 'username' not in st.session_state:
+if st.session_state['logged_in']:
     st.session_state['username'] = cookie_manager.get(cookie="patumwandemonstrationschool_71")
 
 # if st.session_state['username'] == "":
