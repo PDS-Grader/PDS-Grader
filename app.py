@@ -210,6 +210,7 @@ if st.session_state['logged_in'] and st.session_state['username'] != "":
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
         try:
+            cookie_manager.delete("patumwandemonstrationschool_71")
             cookie_manager.set("patumwandemonstrationschool_71", "")
         except Exception as e:
             st.error(f"Error during logout: {e}")
