@@ -13,6 +13,9 @@ import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
 
+# Set page title
+st.title("PDS Grader")
+
 # Load environment variables from a .env file
 load_dotenv('.env')
 
@@ -47,7 +50,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = cookies.get("username", "")
 
-# Function to initialize user database
+# Initialize user database
 def init_user_db():
     with sqlite3.connect('users.db') as conn:
         c = conn.cursor()
@@ -59,7 +62,6 @@ def init_user_db():
         ''')
         conn.commit()
 
-# Initialize user database
 init_user_db()
 
 # Function to check credentials
