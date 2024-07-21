@@ -111,12 +111,21 @@ def user_exists(username):
 # Callback function to enforce lowercase
 def to_lowercase(key):
     if key in st.session_state:
-        st.session_state[key] = st.session_state[key].lower().replace(" ", "")
+        st.session_state[key] = st.session_state[key].lower().replace(" ", "")[0 : 25]
 
 def compile_cpp(source_path, output_path):
     command = ["g++", "-std=c++17", source_path, "-o", output_path]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return result.returncode, result.stdout.decode(), result.stderr.decode()
+
+def download_file(url, destination):
+    try:
+        response = requests.get(url, headers={'Accept': 'application/vnd.github.v3.raw'})
+        response.raise_for_status()
+        with open(destination, 'wb') as f:
+            f.write(response.content)
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error downloading file from {url}: {str(e)}")
 
 def run_executable(executable_path, input_file, runtime_limit, memory_limit):
     try:
@@ -133,7 +142,10 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
             try:
                 process_info = psutil.Process(pid).memory_info()
                 max_memory = process_info.rss
+                # if max_memory == 0:
+                #     max_memory = None  # Treat 0 memory as not available
             except psutil.NoSuchProcess:
+                # max_memory = None  # Process might be terminated already
                 max_memory = 0
 
             try:
@@ -148,72 +160,84 @@ def run_executable(executable_path, input_file, runtime_limit, memory_limit):
         runtime = end_time - start_time
 
         return stdout.decode(), stderr.decode(), runtime, max_memory, returncode
+
     except Exception as e:
-        return "", str(e), None, None, -1
+        return "", f"Error: {str(e)}", 0, None, -1
 
 def grade(output, expected_output_file, runtime, max_memory, runtime_limit, memory_limit):
-    try:
-        with open(expected_output_file, 'r') as f:
-            expected_output = f.read()
+    if runtime is None or max_memory is None:
+        return 0, 0, 0 # Return 0 grade if runtime or max_memory is None
+    
+    with open(expected_output_file, 'r') as f:
+        expected_output = f.read().strip()
+    
+    return 1 if output.strip() == expected_output.strip() else 0, 1 if runtime <= runtime_limit else 0, 1 if max_memory <= memory_limit else 0
 
-        score_output = 1 if output.strip() == expected_output.strip() else 0
-    except Exception as e:
-        score_output = 0
+# Initialize SQLite database for submissions
+conn = sqlite3.connect('submissions.db')
+c = conn.cursor()
 
-    score_runtime = 1 if runtime <= runtime_limit else 0
-    score_memory = 1 if max_memory <= memory_limit else 0
+# Create table if it doesn't exist
+c.execute('''
+    CREATE TABLE IF NOT EXISTS data (
+        DateTime TEXT,
+        Name TEXT,
+        Problem TEXT,
+        Score TEXT,
+        Runtime TEXT,
+        Memory TEXT
+    )
+''')
+conn.commit()
 
-    return score_output, score_runtime, score_memory
-
-def add_row(username, problem_choice, score, runtime, memory):
-    try:
-        conn = sqlite3.connect('submissions.db')
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS submissions (
-                id INTEGER PRIMARY KEY,
-                username TEXT,
-                problem_choice TEXT,
-                score TEXT,
-                runtime TEXT,
-                memory TEXT,
-                timestamp TEXT
-            )
-        ''')
-        conn.commit()
-
-        timestamp = datetime.now(pytz.utc).strftime('%Y-%m-%d %H:%M:%S %Z')
-        c.execute('''
-            INSERT INTO submissions (username, problem_choice, score, runtime, memory, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (username, problem_choice, score, runtime, memory, timestamp))
-        conn.commit()
-    except Exception as e:
-        st.error(f"Error adding submission: {e}")
-    finally:
-        conn.close()
-
+# Load data from the database into a DataFrame
 def load_data():
     try:
         conn = sqlite3.connect('submissions.db')
-        df = pd.read_sql_query('SELECT * FROM submissions', conn)
+        query = 'SELECT * FROM data ORDER BY DateTime DESC'
+        df = pd.read_sql_query(query, conn)
         return df
     except Exception as e:
-        st.error(f"Error loading data: {e}")
-        return pd.DataFrame()
+        st.error(f"Error loading data from database: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on error
     finally:
         conn.close()
 
-# Handle logged-in state
+# Add a new row to the database
+def add_row(name, problem, score, runtime, memory):
+    timezone = pytz.timezone('Asia/Bangkok')
+    datetime_now = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
+    with sqlite3.connect('submissions.db') as conn:
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO data (DateTime, Name, Problem, Score, Runtime, Memory)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (datetime_now, name, problem, score, runtime, memory))
+        conn.commit()
+
+# Main application logic
+st.title("PDS Grader")
+
+# Load login state from cookies
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = cookies.get("logged_in") == "true"
+
+if 'username' not in st.session_state:
+    st.session_state['username'] = cookies.get("username", "")
+
+# Handle login/logout actions
 if st.session_state['logged_in']:
     st.sidebar.write(f"# Welcome! {st.session_state['username']}")
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = ""
-        cookies["logged_in"] = "false"
-        cookies["username"] = ""
-        cookies.save()
-        st.experimental_rerun()
+        try:
+            cookies.delete("logged_in")
+            cookies.delete("username")
+            cookies.save()  # Save changes after deleting cookies
+        except Exception as e:
+            st.error(f"Error during logout: {e}")
+        st.rerun()
 else:
     # Sidebar for navigation
     menu = ["Login", "Register"]
@@ -230,102 +254,187 @@ else:
             if check_credentials(username, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = username
-                cookies["logged_in"] = "true"
-                cookies["username"] = username
-                cookies.save()
-                st.experimental_rerun()
+                try:
+                    cookies.set("logged_in", "true")
+                    cookies.set("username", username)
+                    cookies.save()  # Save changes after setting cookies
+                except Exception as e:
+                    st.error(f"Error setting cookies: {e}")
+                st.rerun()
             else:
-                st.sidebar.warning("Incorrect Username/Password")
+                st.sidebar.error("Invalid username or password")
 
     elif choice == "Register":
         st.sidebar.subheader("Create New Account")
-        new_username = st.sidebar.text_input("Username", key="register_username", on_change=to_lowercase, args=("register_username",))
-        new_password = st.sidebar.text_input("Password", type="password", key="register_password")
+
+        new_username = st.sidebar.text_input("New Username", key="register_username", on_change=to_lowercase, args=("register_username",))
+        new_password = st.sidebar.text_input("New Password", type="password", key="register_password")
         register_button = st.sidebar.button("Register")
 
         if register_button:
             if user_exists(new_username):
-                st.sidebar.warning("Username already exists")
+                st.sidebar.error("Username already exists. Please choose a different username.")
+            elif len(new_username) == 0:
+                st.sidebar.error("Please enter a username.")
+            elif len(new_password) == 0:
+                st.sidebar.error("Please enter a password.")
             else:
                 add_user(new_username, new_password)
-                st.sidebar.success("Account created successfully")
-
-if st.session_state['logged_in']:
-    problem_choice = st.selectbox("Select a problem", ["pointing", "stonks"])
-
-    source_code = st.text_area("Enter your C/C++ code here")
-
-    input_files = {
-        "pointing": "problems/pointing/input.txt",
-        "stonks": "problems/stonks/input.txt"
+                st.sidebar.success("You have successfully created an account!")
+                st.sidebar.info("Go to the Login menu to log in.")
+                
+# Problem definitions
+problems = {
+    "Submissions": {
+        
+    },
+    "Pointing": {
+        "test_cases": 10,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    },
+    "Stonks": {
+        "test_cases": 10,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    },
+    "Polygon": {
+        "test_cases": 10,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
     }
+    # Add more problems here
+}
 
-    expected_output_files = {
-        "pointing": "problems/pointing/expected_output.txt",
-        "stonks": "problems/stonks/expected_output.txt"
-    }
+# Select problem
+selected_problem = st.selectbox("Select a problem or view submissions", list(problems.keys()))
 
-    runtime_limits = {
-        "pointing": 1.0,
-        "stonks": 1.0
-    }
+st.write(f"### {selected_problem}")
 
-    memory_limits = {
-        "pointing": 128 * 1024 * 1024,
-        "stonks": 128 * 1024 * 1024
-    }
+# Load data for submissions or show problem PDF
+if selected_problem == "Submissions":
+    data = load_data()
 
-    if st.button("Submit"):
-        if not source_code:
-            st.error("Please enter your source code.")
+    # Configure the AgGrid table
+    gb = GridOptionsBuilder.from_dataframe(data)
+    gb.configure_pagination(enabled=True)
+    gb.configure_side_bar()
+    gb.configure_default_column(editable=True, groupable=True)
+    grid_options = gb.build()
+
+    # Display the table with AgGrid
+    AgGrid(data, gridOptions=grid_options)  
+    
+else:
+    # Show problem PDF and allow file upload
+    with open(f"./Problems/{selected_problem}/{selected_problem}.pdf", "rb") as pdf:
+        st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem}.pdf")
+
+    # File uploader for code submission
+    uploaded_file = st.file_uploader("Upload code file (.cpp)", type=["cpp"])
+
+    # Text area to input the code
+    code = st.text_area("Or enter your code here", height=300)
+
+    # Button to compile and run
+    if st.button("Submit Code"):
+        if not st.session_state['logged_in']:
+            st.error("Please login before submitting")
+        elif uploaded_file is not None:
+            # Save the uploaded file
+            source_path = "uploaded_code.cpp"
+            with open(source_path, "wb") as f:
+                f.write(uploaded_file.getvalue())
+
+            executable_path = "./submitted_code"
+
+            compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
+
+            if compile_returncode != 0:
+                st.error(f"Compilation failed:\n{compile_stderr}")
+            else:
+                total_grade = 0
+                total_test_cases = problems[selected_problem]["test_cases"]
+                mxrt = 0
+                mxmem = 0
+
+                for idx in range(1, total_test_cases + 1):
+                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    input_file = f"./Problems/{selected_problem}/{idx}.in"
+                    # download_file(input_url, input_file)
+
+                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
+                    # download_file(expected_output_url, expected_output_file)
+
+                    output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    mxrt = max(mxrt, runtime)
+                    mxmem = max(mxmem, max_memory)
+                    opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    total_grade += (opc and tle and mle)
+                    cw = "Correct Answer" if opc == 1 else "Wrong Answer"
+                    cw = "Time Limit Exceed" if tle == 0 else cw
+                    cw = "Memory Limit Exceed" if mle == 0 else cw
+                    st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+
+                final_grade = total_grade * (100 / total_test_cases)
+                st.write(f"### Total : {round(final_grade)}/{100}")
+                
+                add_row(st.session_state['username'], selected_problem, f"{round(final_grade)}/{100}", f"{round(mxrt * 1000)} ms", f"{round(mxmem / (1024 * 1024) * 1000)} kB")
+
+                # Clean up
+                if os.path.exists(source_path):
+                    os.remove(source_path)
+                if os.path.exists(executable_path):
+                    os.remove(executable_path)
+        elif code:
+            source_path = "submitted_code.cpp"
+            executable_path = "./submitted_code"
+
+            with open(source_path, "w") as f:
+                f.write(code)
+
+            compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
+
+            if compile_returncode != 0:
+                st.error(f"Compilation failed:\n{compile_stderr}")
+            else:
+                total_grade = 0
+                total_test_cases = problems[selected_problem]["test_cases"]
+                mxrt = 0
+                mxmem = 0
+
+                for idx in range(1, total_test_cases + 1):
+                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                    input_file = f"./Problems/{selected_problem}/{idx}.in"
+                    # download_file(input_url, input_file)
+
+                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
+                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
+                    # download_file(expected_output_url, expected_output_file)
+
+                    output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    mxrt = max(mxrt, runtime)
+                    mxmem = max(mxmem, max_memory)
+                    opc, tle, mle = grade(output, expected_output_file, runtime, max_memory, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
+                    total_grade += (opc and tle and mle)
+                    cw = "Correct Answer" if opc == 1 else "Wrong Answer"
+                    cw = "Time Limit Exceed" if tle == 0 else cw
+                    cw = "Memory Limit Exceed" if mle == 0 else cw
+                    st.write(f" Test Case {idx}\t: {cw} - {round(runtime * 1000)} ms - {round(max_memory / (1024 * 1024) * 1000)} kB")
+
+                final_grade = total_grade * (100 / total_test_cases)
+                st.write(f"### Total : {round(final_grade)}/{100}")
+                
+                add_row(st.session_state['username'], selected_problem, f"{round(final_grade)}/{100}", f"{round(mxrt * 1000)} ms", f"{round(mxmem / (1024 * 1024) * 1000)} kB")
+
+                # Clean up
+                if os.path.exists(source_path):
+                    os.remove(source_path)
+                if os.path.exists(executable_path):
+                    os.remove(executable_path)
         else:
-            try:
-                problem_input_file = input_files[problem_choice]
-                expected_output_file = expected_output_files[problem_choice]
-                runtime_limit = runtime_limits[problem_choice]
-                memory_limit = memory_limits[problem_choice]
+            st.error("No code submitted")
 
-                if not os.path.exists('submitted_code'):
-                    os.makedirs('submitted_code')
-
-                source_code_path = f"submitted_code/{st.session_state['username']}_{problem_choice}.cpp"
-                with open(source_code_path, 'w') as f:
-                    f.write(source_code)
-
-                executable_path = f"submitted_code/{st.session_state['username']}_{problem_choice}.out"
-                compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_code_path, executable_path)
-
-                if compile_returncode != 0:
-                    st.error(f"Compilation failed with error: {compile_stderr}")
-                else:
-                    st.success("Compilation successful.")
-                    stdout, stderr, runtime, max_memory, returncode = run_executable(executable_path, problem_input_file, runtime_limit, memory_limit)
-
-                    if returncode == -1:
-                        st.error("Execution timed out.")
-                    elif returncode != 0:
-                        st.error(f"Execution failed with error: {stderr}")
-                    else:
-                        score_output, score_runtime, score_memory = grade(stdout, expected_output_file, runtime, max_memory, runtime_limit, memory_limit)
-                        total_score = score_output + score_runtime + score_memory
-
-                        st.write(f"Output Score: {score_output} / 1")
-                        st.write(f"Runtime Score: {score_runtime} / 1")
-                        st.write(f"Memory Score: {score_memory} / 1")
-                        st.write(f"Total Score: {total_score} / 3")
-
-                        add_row(st.session_state['username'], problem_choice, total_score, runtime, max_memory)
-
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-
-    if st.button("View Submissions"):
-        df = load_data()
-        if not df.empty:
-            st.write("## Submissions")
-            gb = GridOptionsBuilder.from_dataframe(df)
-            gb.configure_pagination()
-            grid_options = gb.build()
-            AgGrid(df, gridOptions=grid_options)
-        else:
-            st.write("No submissions found.")
+# Close the database connection when done
+conn.close()
