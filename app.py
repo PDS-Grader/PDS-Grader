@@ -13,8 +13,6 @@ import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
 
-st.write("# PDS Grader")
-
 # Load environment variables from a .env file
 load_dotenv('.env')
 
@@ -216,6 +214,7 @@ def add_row(name, problem, score, runtime, memory):
         conn.commit()
 
 # Main application logic
+st.write("# PDS Grader")
 
 # Load login state from cookies
 if 'logged_in' not in st.session_state:
