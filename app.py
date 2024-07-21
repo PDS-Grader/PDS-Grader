@@ -13,7 +13,7 @@ import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
 
-st.title("PDS Grader")
+st.write("# PDS Grader")
 
 # Load environment variables from a .env file
 load_dotenv('.env')
