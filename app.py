@@ -31,7 +31,7 @@ if not COOKIE_PASSWORD:
 
 # Initialize the cookies manager
 cookies = EncryptedCookieManager(
-    prefix="myapp_",  # unique prefix to distinguish cookies used by this app
+    prefix="pds-grader/pdsgrader/",  # unique prefix to distinguish cookies used by this app
     password=COOKIE_PASSWORD  # password for encrypting cookies from environment variables
 )
 
