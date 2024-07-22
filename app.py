@@ -334,16 +334,17 @@ else:
     code = st.text_area("Or enter your code here", height=300)
 
     # Button to compile and run
-    if st.button("Submit Code"):
-        if not st.session_state['logged_in']:
-            st.error("Please login before submitting")
-        elif uploaded_file is not None:
+if st.button("Submit Code"):
+    if not st.session_state['logged_in']:
+        st.error("Please login before submitting")
+    else:
+        if uploaded_file is not None:
             # Save the uploaded file
             source_path = "uploaded_code.cpp"
             with open(source_path, "wb") as f:
                 f.write(uploaded_file.getvalue())
 
-            executable_path = "./submitted_code"
+            executable_path = "./submitted_code_executable"
 
             compile_returncode, compile_stdout, compile_stderr = compile_cpp(source_path, executable_path)
 
@@ -355,14 +356,9 @@ else:
                 mxrt = 0
                 mxmem = 0
 
-                for idx in range(1, total_test_cases + 1):
-                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                for idx in range(1, total_test_cases+1):
                     input_file = f"./Problems/{selected_problem}/{idx}.in"
-                    # download_file(input_url, input_file)
-
-                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
-                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
-                    # download_file(expected_output_url, expected_output_file)
+                    expected_output_file = f"./Problems/{selected_problem}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
@@ -384,9 +380,10 @@ else:
                     os.remove(source_path)
                 if os.path.exists(executable_path):
                     os.remove(executable_path)
+
         elif code:
             source_path = "submitted_code.cpp"
-            executable_path = "./submitted_code"
+            executable_path = "./submitted_code_executable"
 
             with open(source_path, "w") as f:
                 f.write(code)
@@ -401,14 +398,9 @@ else:
                 mxrt = 0
                 mxmem = 0
 
-                for idx in range(1, total_test_cases + 1):
-                    # input_url = f"https://raw.githubusercontent.com/Nagornph/Grader_St/main/Problems/{selected_problem}/{idx}.in"
+                for idx in range(1, total_test_cases+1):
                     input_file = f"./Problems/{selected_problem}/{idx}.in"
-                    # download_file(input_url, input_file)
-
-                    # expected_output_url = f"https://raw.githubusercontent.com/NagornPh/Grader_St/main/Problems/{selected_problem}/{idx}.out"
-                    expected_output_file = f"Problems/{selected_problem}/{idx}.out"
-                    # download_file(expected_output_url, expected_output_file)
+                    expected_output_file = f"./Problems/{selected_problem}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
@@ -430,8 +422,10 @@ else:
                     os.remove(source_path)
                 if os.path.exists(executable_path):
                     os.remove(executable_path)
+
         else:
             st.error("No code submitted")
+
 
 # Close the database connection when done
 conn.close()
