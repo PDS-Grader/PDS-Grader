@@ -31,7 +31,7 @@ if not COOKIE_PASSWORD:
 
 # Initialize the cookies manager
 cookies = EncryptedCookieManager(
-    prefix="pds-grader/pdsgrader/",  # unique prefix to distinguish cookies used by this app
+    prefix="myapp_",  # unique prefix to distinguish cookies used by this app
     password=COOKIE_PASSWORD  # password for encrypting cookies from environment variables
 )
 
@@ -47,7 +47,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = cookies.get("username", "")
 
-# Function to initialize user database
+# Initialize user database
 def init_user_db():
     with sqlite3.connect('users.db') as conn:
         c = conn.cursor()
@@ -59,7 +59,6 @@ def init_user_db():
         ''')
         conn.commit()
 
-# Initialize user database
 init_user_db()
 
 # Function to check credentials
@@ -214,7 +213,7 @@ def add_row(name, problem, score, runtime, memory):
         conn.commit()
 
 # Main application logic
-st.write("# PDS Grader")
+st.title("PDS Grader")
 
 # Load login state from cookies
 if 'logged_in' not in st.session_state:
