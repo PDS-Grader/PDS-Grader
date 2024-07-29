@@ -13,6 +13,9 @@ import pytz
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
 
+# # Set page title
+# st.title("PDS Grader")
+
 # Load environment variables from a .env file
 load_dotenv('.env')
 
@@ -296,6 +299,11 @@ problems = {
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
     },
     "Polygon": {
+        "test_cases": 10,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    },
+    "Medulla": {
         "test_cases": 10,
         "rt": 1,  # Runtime limit in seconds
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
