@@ -310,7 +310,7 @@ problems = {
     },
     "Election": {
         "test_cases": 10,
-        "rt": 2,  # Runtime limit in seconds
+        "rt": 0.5,  # Runtime limit in seconds
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
     }
     # Add more problems here
