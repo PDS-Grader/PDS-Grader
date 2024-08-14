@@ -322,8 +322,7 @@ problems = {
 }
 
 # Select problem
-selected_problem = st.selectbox("Select a problem or view submissions", list(problems.key()))
-
+selected_problem = st.selectbox("Select a problem or view submissions", list(problems.keys()))
 st.write(f"### {selected_problem}")
 
 # Load data for submissions or show problem PDF
