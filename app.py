@@ -342,7 +342,7 @@ if selected_problem == "Submissions":
     
 else:
     # Show problem PDF and allow file upload
-    with open(f"./Problems/{(selected_problem.replace(" ", ""))}/{(selected_problem.replace(" ", ""))}.pdf", "rb") as pdf:
+    with open(f"./Problems/{(selected_problem.replace(" ", ""))}/{(selected_problem.replace(' ', ''))}.pdf", "rb") as pdf:
         st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem.replace(" ", "")}.pdf")
 
     # File uploader for code submission
