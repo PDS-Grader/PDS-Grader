@@ -375,8 +375,8 @@ if st.button("Submit Code"):
                 mxmem = 0
 
                 for idx in range(1, total_test_cases+1):
-                    input_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.in"
-                    expected_output_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.out"
+                    input_file = f"./Problems/{selected_problem.replace(' ', '')}/{idx}.in"
+                    expected_output_file = f"./Problems/{selected_problem.replace(' ', '')}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
@@ -417,8 +417,8 @@ if st.button("Submit Code"):
                 mxmem = 0
 
                 for idx in range(1, total_test_cases+1):
-                    input_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.in"
-                    expected_output_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.out"
+                    input_file = f"./Problems/{selected_problem.replace(' ', '')}/{idx}.in"
+                    expected_output_file = f"./Problems/{selected_problem.replace(' ', '')}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
