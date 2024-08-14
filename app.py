@@ -315,7 +315,7 @@ problems = {
     },
     "Kidney Stones": {
         "test_cases": 5,
-        "rt": 1,  # Runtime limit in seconds
+        "rt": 0.005,  # Runtime limit in seconds
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
     }
     # Add more problems here
