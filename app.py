@@ -312,12 +312,17 @@ problems = {
         "test_cases": 10,
         "rt": 0.5,  # Runtime limit in seconds
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    },
+    "Kidney Stones": {
+        "test_cases": 5,
+        "rt": 1,  # Runtime limit in seconds
+        "mem": 32 * 1024 * 1024  # Memory limit in bytes
     }
     # Add more problems here
 }
 
 # Select problem
-selected_problem = st.selectbox("Select a problem or view submissions", list(problems.keys()))
+selected_problem = st.selectbox("Select a problem or view submissions", list(problems.key()))
 
 st.write(f"### {selected_problem}")
 
@@ -337,8 +342,8 @@ if selected_problem == "Submissions":
     
 else:
     # Show problem PDF and allow file upload
-    with open(f"./Problems/{selected_problem}/{selected_problem}.pdf", "rb") as pdf:
-        st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem}.pdf")
+    with open(f"./Problems/{selected_problem.replace(" ", "")}/{selected_problem.replace(" ", "").}.pdf", "rb") as pdf:
+        st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem.replace(" ", "")}.pdf")
 
     # File uploader for code submission
     uploaded_file = st.file_uploader("Upload code file (.cpp)", type=["cpp"])
@@ -370,8 +375,8 @@ if st.button("Submit Code"):
                 mxmem = 0
 
                 for idx in range(1, total_test_cases+1):
-                    input_file = f"./Problems/{selected_problem}/{idx}.in"
-                    expected_output_file = f"./Problems/{selected_problem}/{idx}.out"
+                    input_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.in"
+                    expected_output_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
@@ -412,8 +417,8 @@ if st.button("Submit Code"):
                 mxmem = 0
 
                 for idx in range(1, total_test_cases+1):
-                    input_file = f"./Problems/{selected_problem}/{idx}.in"
-                    expected_output_file = f"./Problems/{selected_problem}/{idx}.out"
+                    input_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.in"
+                    expected_output_file = f"./Problems/{selected_problem.replace(" ", "")}/{idx}.out"
 
                     output, errors, runtime, max_memory, returncode = run_executable(executable_path, input_file, problems[selected_problem]["rt"], problems[selected_problem]["mem"])
                     mxrt = max(mxrt, runtime)
