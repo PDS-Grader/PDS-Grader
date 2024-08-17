@@ -345,15 +345,9 @@ if selected_problem == "Submissions":
     AgGrid(data, gridOptions=grid_options)  
     
 else:
-    # Placeholder for showing problem PDF and allowing file upload
-    problem_file_path = f"./Problems/{selected_problem.replace(' ', '')}/{selected_problem.replace(' ', '')}.pdf"
-
-    # Skip PDF download if the file is intentionally not included
-    if not os.path.exists(problem_file_path):
-        st.info(f"No problem file available for {selected_problem}.")
-    else:
-        with open(problem_file_path, "rb") as pdf:
-            st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem.replace(' ', '')}.pdf")
+    # Show problem PDF and allow file upload
+    with open(f"./Problems/{(selected_problem.replace(' ', ''))}/{(selected_problem.replace(' ', ''))}.pdf", "rb") as pdf:
+        st.download_button("Download Problem", data=pdf.read(), file_name=f"{selected_problem.replace(' ', '')}.pdf")
 
     # File uploader for code submission
     uploaded_file = st.file_uploader("Upload code file (.cpp)", type=["cpp"])
