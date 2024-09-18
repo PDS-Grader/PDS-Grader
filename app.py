@@ -318,11 +318,11 @@ problems = {
         "rt": 0.005,  # Runtime limit in seconds
         "mem": 32 * 1024 * 1024  # Memory limit in bytes
     },
-    "Parentheses Key": {
-        "test_cases": 10,
-        "rt": 1,  # Runtime limit in seconds
-        "mem": 32 * 1024 * 1024  # Memory limit in bytes
-    },
+    # "Parentheses Key": {
+    #     "test_cases": 10,
+    #     "rt": 1,  # Runtime limit in seconds
+    #     "mem": 32 * 1024 * 1024  # Memory limit in bytes
+    # },
     # Add more problems here
 }
 
